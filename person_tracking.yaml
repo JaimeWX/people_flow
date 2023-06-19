@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: people-flow-deployment
+  labels:
+    app: people-flow
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: people-flow
+  template:
+    metadata:
+      labels:
+        app: people-flow
+    spec:
+      imagePullSecrets:
+        - name: aliyun-secret
+      containers:
+        - name: people-flow
+          imagePullPolicy: IfNotPresent
+          image: fame-docker-registary-registry.cn-shanghai.cr.aliyuncs.com/fame/person_tracking:c0abd0c
+          volumeMounts:
+            - name: famenas-path
+              mountPath: /famenas
+          env:
+            - name: RTSP_IP
+              value: "192.168.82.117"
+            - name: IPADDRESS
+              value: "0.0.0.0"
+            - name: PORT
+              value: "5006"
+      volumes:
+      - name: famenas-path
+        hostPath:
+           path: /famenas
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: people-flow-service
+  labels:
+    app: people-flow
+spec:
+  type: NodePort
+  selector:
+    app: people-flow
+  ports:
+    - port: 5006
+      targetPort: 5006
+      nodePort: 30099
